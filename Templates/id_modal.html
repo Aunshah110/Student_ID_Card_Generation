@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ID Card - {{ student.name }}</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet" />
+
+  <style>
+    body {
+      font-family: "Inter", Arial, sans-serif;
+      background-color: #ffffff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 30px;
+    }
+
+    .card-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 30px;
+      justify-content: center;
+      align-items: flex-start;
+      width: 100%;
+    }
+
+    .card {
+      position: relative;
+      width: 360px;
+      height: 560px;
+      background-color: #ffffff;
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.25s ease-in-out;
+    }
+
+    .card * { position: relative; z-index: 1; }
+
+    /* FRONT HEADER */
+    .front-header {
+      display: flex;
+      align-items: center;
+      background-color: #592b1b;
+      color: white;
+      padding: 15px;
+      border-bottom: 3px solid #d9a627;
+      justify-content: center;
+    }
+
+    .logo {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      overflow: hidden;
+      background: #ffffff;
+      border: 2px solid #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-left: 15px;
+    }
+
+    .logo img {
+      width: 65px;
+      height: 65px;
+      object-fit: contain;
+    }
+
+    .university-name {
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.4;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    /* FRONT BODY */
+    .front-body {
+      text-align: center;
+      padding: 15px 15px 5px;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+    }
+
+    .student-photo {
+      width: 132px;
+      height: 170px;
+      margin: 0 auto 8px;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 4px solid #fff;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+    }
+
+    .student-photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .student-info {
+      line-height: 1.2;
+      margin-top: 5px;
+    }
+
+    .student-info .batch {
+      font-size: 15px;
+      font-weight: 700;
+      color: #4a5568;
+      margin: 0 0 6px;
+    }
+
+    .student-info .name {
+      font-size: 19px;
+      font-weight: 900;
+      color: #1a202c;
+      margin: 8px 0;
+      text-transform: uppercase;
+    }
+
+    .student-info .department {
+      font-size: 14.5px;
+      font-weight: 800;
+      color: #592b1b;
+      margin: 3px 0 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .student-info .roll-label {
+      font-size: 15px;
+      font-weight: 700;
+      margin: 4px 0 0;
+      color: #2d3748;
+    }
+
+    .student-info .roll-number {
+      font-size: 18px;
+      font-weight: 900;
+      color: #592b1b;
+      letter-spacing: 0.5px;
+      margin-top: 0;
+    }
+
+    .signature-block {
+      margin-top: auto;
+      padding: 8px 20px 0;
+      text-align: right;
+    }
+
+    .signature-area {
+      font-family: "Brush Script MT", cursive;
+      font-size: 26px;
+      color: #2d3748;
+      line-height: 1;
+    }
+
+    .director-title {
+      font-size: 12px;
+      font-weight: 700;
+      border-top: 2px solid #592b1b;
+      margin-top: 3px;
+      padding-top: 2px;
+      letter-spacing: 0.4px;
+      color: #2d3748;
+    }
+
+    .front-footer {
+      background: #fff7e6;
+      padding: 10px 18px;
+      border-top: 2px solid #d9a627;
+      border-bottom-left-radius: 18px;
+      border-bottom-right-radius: 18px;
+      text-align: center;
+    }
+
+    .degree-title {
+      font-size: 13px;
+      font-weight: 900;
+      color: #2d3748;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    /* BACK SIDE */
+    .back-body {
+      padding: 20px 20px 10px;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .info-list { text-align: left; }
+
+    .info-item {
+      display: flex;
+      margin-bottom: 7px;
+      font-size: 13px;
+    }
+
+    .label { width: 115px; font-weight: 700; color: #2d3748; text-transform: uppercase; }
+    .separator { margin: 0 4px; font-weight: 700; color: #2d3748; }
+    .value { font-weight: 600; color: #4a5568; text-transform: uppercase; word-break: break-word; }
+
+    .return-address {
+      font-size: 11px;
+      color: #4a5568;
+      background: rgba(255, 255, 255, 0.85);
+      border-radius: 8px;
+      padding: 10px;
+      text-align: center;
+      margin-top: 15px;
+      line-height: 1.4;
+    }
+
+    .back-footer {
+      padding: 14px 18px 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .qr-code img {
+      width: 95px;
+      height: 95px;
+      border: 2px dashed #592b1b;
+      border-radius: 12px;
+      padding: 6px;
+      background: #fff;
+    }
+
+    .valid-upto {
+      font-size: 13px;
+      font-weight: 700;
+      color: #c53030;
+      text-align: center;
+      margin-top: 8px;
+    }
+
+    .contact-bar {
+      background-color: #592b1b;
+      color: #fff;
+      padding: 7px;
+      text-align: center;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      border-bottom-left-radius: 15px;
+      border-bottom-right-radius: 15px;
+    }
+
+    /* ------------------------- */
+    /* 🔥 FULL RESPONSIVE SYSTEM */
+    /* ------------------------- */
+
+    /* Tablets */
+    @media (max-width: 850px) {
+      .card {
+        transform: scale(0.92);
+      }
+    }
+
+    /* Large Phones – 6.5 inch */
+    @media (max-width: 650px) {
+      body { padding: 12px; }
+
+      .card {
+        width: 310px;
+        height: auto;
+        transform: scale(0.88);
+      }
+
+      .student-photo {
+        width: 118px;
+        height: 155px;
+      }
+
+      .name { font-size: 17px !important; }
+      .department { font-size: 13px !important; }
+      .roll-label { font-size: 14px; }
+      .roll-number { font-size: 17px; }
+    }
+
+    /* Small Phones – 5.5–6 inch */
+    @media (max-width: 500px) {
+      .card {
+        width: 280px;
+        transform: scale(0.85);
+      }
+
+      .university-name { font-size: 11px; }
+
+      .student-photo {
+        width: 110px;
+        height: 145px;
+      }
+
+      .info-item { font-size: 12px; }
+      .label { width: 100px; }
+      .value { font-size: 12px; }
+      .qr-code img { width: 85px; height: 85px; }
+    }
+
+    /* Extra Small Phones – iPhone SE, older Android */
+    @media (max-width: 380px) {
+      .card {
+        width: 250px;
+        transform: scale(0.78);
+      }
+
+      .student-photo {
+        width: 100px;
+        height: 135px;
+      }
+
+      .qr-code img {
+        width: 75px;
+        height: 75px;
+      }
+    }
+
+    @media print {
+      body { background: white; }
+      .card { box-shadow: none; transform: scale(1); }
+    }
+  </style>
+</head>
+
+
+<body>
+  <div class="card-container">
+    <!-- FRONT SIDE -->
+    <div class="card">
+      <header class="front-header">
+        <div class="logo">
+          <img src="{{ url_for('static', filename='uni_logo.png') }}" alt="University Logo" />
+        </div>
+        <div class="university-name">
+          The Benazir Bhutto Shaheed University of Technology<br/>
+          and Skill Development<br />
+          Khairpur Mirs
+        </div>
+      </header>
+
+      <main class="front-body">
+        <div class="student-photo">
+          {% if student.image_path %}
+            <img src="{{ url_for('static', filename=student.image_path.split('static/')[-1]) }}" alt="Student Photo" />
+          {% else %}
+            <img src="https://placehold.co/132x170?text=No+Photo" alt="Placeholder" />
+          {% endif %}
+        </div>
+
+        <div class="student-info">
+          <p class="batch">{{ student.batch }} ({{ student.year }} Years)</p>
+          <h2 class="name">{{ student.name }}</h2>
+          <p class="department">Department of {{ student.department }}</p>
+          <p class="roll-label">Class Roll #<span class="roll-number"> {{ student.roll_no }}</span></p>
+        </div>
+
+        <div class="signature-block">
+          <div class="signature-area">A. Signature</div>
+          <div class="director-title">DIRECTOR ADMISSIONS</div>
+        </div>
+      </main>
+
+      <footer class="front-footer">
+        <p class="degree-title">{{ student.degree }}</p>
+      </footer>
+    </div>
+
+    <!-- BACK SIDE -->
+    <div class="card">
+      <main class="back-body">
+        <div class="info-list">
+          <div class="info-item"><span class="label">Father's Name</span><span class="separator">:</span><span class="value">{{ student.father_name }}</span></div>
+          <div class="info-item"><span class="label">Caste</span><span class="separator">:</span><span class="value">{{ student.caste }}</span></div>
+          <div class="info-item"><span class="label">CNIC/B.Form</span><span class="separator">:</span><span class="value">{{ student.cnic }}</span></div>
+          <div class="info-item"><span class="label">Enrollment #</span><span class="separator">:</span><span class="value">{{ student.enrollment }}</span></div>
+          <div class="info-item"><span class="label">Emergency #</span><span class="separator">:</span><span class="value">{{ student.emergency_contact }}</span></div>
+          <div class="info-item"><span class="label">Relation</span><span class="separator">:</span><span class="value">{{ student.relation }}</span></div>
+          <div class="info-item"><span class="label">Blood Group</span><span class="separator">:</span><span class="value">{{ student.blood_group }}</span></div>
+          <div class="info-item"><span class="label">Address</span><span class="separator">:</span><span class="value">{{ student.address }}</span></div>
+        </div>
+
+        <div class="return-address">
+          If found please return to the Benazir Bhutto Shaheed University of Technology and Skill Development Khairpur Mir's Sindh (66020)
+        </div>
+      </main>
+
+      <div class="back-footer">
+        <div class="qr-code">
+          {% if student.qr_code %}
+            <img src="{{ url_for('static', filename=student.qr_code) }}" alt="QR Code">
+          {% else %}
+            <img src="https://placehold.co/100x100?text=QR" alt="Placeholder QR">
+          {% endif %}
+        </div>
+
+        <p class="valid-upto">Valid upto: {{ student.valid_until or '31st December 2026' }}</p>
+      </div>
+
+      <footer class="contact-bar">
+        <p>www.bbsutsd.edu.pk | Contact : 0243-687059<br>
+           Email: director-admission@bbsutsd.edu.pk
+        </p>
+      </footer>
+    </div>
+  </div>
+</body>
+</html>

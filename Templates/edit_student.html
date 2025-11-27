@@ -1,0 +1,345 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  /* --- Paste all CSS from student_register.html here --- */
+  :root{
+    --black: #070707;
+    --brown-dark: #3e2a1f;
+    --brown-mid: #7a5230;
+    --brown-light: #d2a679;
+    --cream: #f5f5dc;
+    --yellow: #FFD24A;
+    --glass: rgba(255,255,255,0.06);
+    --card-bg: rgba(18,14,12,0.72);
+    --accent: linear-gradient(90deg, #b07a49, #8b5a2b);
+    --transition: all 0.28s cubic-bezier(.2,.9,.3,1);
+  }
+
+  body{
+    background: linear-gradient(135deg, var(--brown-light) 0%, var(--cream) 100%);
+    min-height:100vh;
+    margin:0;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--cream);
+  }
+
+  .admin-wrapper{
+    padding: calc(150px + 1.5rem) 1.25rem 4rem;
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    min-height: calc(100vh - 80px);
+    box-sizing:border-box;
+  }
+
+  .dashboard-card{
+    width: min(980px, 98%);
+    background: rgba(112,62,35,0.9);
+    border-bottom: 2px solid var(--yellow);
+    border-radius: 16px;
+    padding: clamp(15px, 3.6vw, 34px);
+    box-shadow: 0 20px 40px rgba(15,10,8,0.35), inset 0 1px 0 rgba(255,255,255,0.03);
+    position:relative;
+    overflow:hidden;
+    backdrop-filter: blur(8px);
+  }
+
+  h1,h2,h3{
+    color: var(--yellow);
+    text-align:center;
+    font-weight:800;
+    margin-bottom:1rem;
+    text-shadow: 0 3px 6px rgba(0,0,0,0.35);
+  }
+
+  .form-container {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .form-section {
+    background: rgba(255,255,255,0.05);
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0.5rem;
+  }
+
+  .form-label {
+    font-weight: 600;
+    color: var(--cream);
+    margin-bottom: 0.75rem;
+    font-size: 0.95rem;
+    display: block;
+  }
+
+  .form-control, .form-select, .form-control-file {
+    border-radius: 8px;
+    padding: 14px 16px;
+    border: 2px solid var(--brown-mid);
+    background: var(--cream);
+    color: var(--black);
+    transition: var(--transition);
+    width: 100%;
+    font-size: 1rem;
+    font-family: inherit;
+  }
+
+  .btn-dashboard{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:12px;
+    padding: 14px 28px;
+    font-size: 1rem;
+    border-radius: 8px;
+    text-decoration:none;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:0.7px;
+    color: var(--black);
+    background: linear-gradient(180deg, var(--yellow), #f6c95a);
+    border: 2px solid rgba(0,0,0,0.08);
+    cursor: pointer;
+    min-width: 160px;
+  }
+
+  .btn-secondary {
+    background: linear-gradient(180deg, var(--brown-mid), var(--brown-dark));
+    color: var(--cream);
+  }
+
+  /* Button group container */
+.btn-group {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center; /* center horizontally */
+  gap: 1rem; /* space between buttons */
+  margin-top: 2rem;
+}
+
+/* Individual buttons */
+.btn-dashboard {
+  flex: 1 1 200px; /* responsive min width */
+  max-width: 220px;
+  text-align: center;
+}
+
+/* Secondary buttons */
+.btn-dashboard.btn-secondary {
+  background: linear-gradient(180deg, var(--brown-mid), var(--brown-dark));
+  color: var(--cream);
+}
+
+/* Delete button */
+.btn-dashboard.btn-delete {
+  background: linear-gradient(180deg, #f44336, #b71c1c);
+  color: #fff;
+}
+
+/* Circular image container */
+.student-image-container {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 3px solid var(--yellow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  position: relative;
+  margin-bottom: 12px;
+}
+
+/* Change Image Button */
+.btn-change-image {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  font-size: 0.9rem;
+  border-radius: 8px;
+  background: linear-gradient(180deg, var(--yellow), #f6c95a);
+  color: var(--black);
+  font-weight: 700;
+  text-transform: uppercase;
+  border: 2px solid rgba(0,0,0,0.08);
+  cursor: pointer;
+  transition: var(--transition);
+  min-width: 140px; /* match circular image size */
+  text-align: center;
+}
+
+.btn-change-image:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 6px 15px rgba(0,0,0,0.25);
+}
+
+</style>
+
+<div class="admin-wrapper">
+  <div class="dashboard-card" role="region" aria-label="Edit Student Record">
+    <div class="dashboard-inner">
+
+      <h1 class="student-application-title">Edit Student Record</h1>
+
+      <form method="post" action="{{ url_for('edit_student', student_id=student.id) }}" enctype="multipart/form-data" class="form-container">
+        <!-- Circular Image Section -->
+    
+        <div style="display:flex; flex-direction:column; align-items:center; margin-bottom:2rem;">
+          <div class="student-image-container">
+            {% if student.image_path %}
+              <img src="{{ url_for('static', filename=student.image_path) }}" 
+                   alt="Student Photo" 
+                   style="width:100%; height:100%; object-fit:cover;">
+            {% else %}
+              <span style="color:#999; font-size:0.85rem;">No Image</span>
+            {% endif %}
+          </div>
+      
+          <label for="student_image" class="btn-change-image">
+            <span>Change Image</span>
+          </label>
+          <input type="file" id="student_image" name="student_image" accept="image/*" style="display:none;">
+        </div>
+
+        <!-- Editable Fields -->
+        <div class="form-section">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label required">Name</label>
+              <input type="text" name="name" class="form-control" value="{{ student.name }}" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label required">Father's Name</label>
+              <input type="text" name="father_name" class="form-control" value="{{ student.father_name }}" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label required">CNIC</label>
+              <input type="text" name="cnic" class="form-control" value="{{ student.cnic }}" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label required">Caste</label>
+              <input type="text" name="caste" class="form-control" value="{{ student.caste }}" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label required">Roll Number</label>
+              <input type="text" name="roll_no" class="form-control" value="{{ student.roll_no }}" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label required">Batch</label>
+              <select name="batch" class="form-select" required>
+                {% for b in batches %}
+                  <option value="{{ b }}" {% if student.batch == b %}selected{% endif %}>{{ b }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label required">Department</label>
+              <select name="department" class="form-select" required>
+                {% for d in departments %}
+                  <option value="{{ d }}" {% if student.department == d %}selected{% endif %}>{{ d }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label required">Year</label>
+              <select name="year" class="form-select" required>
+                {% for y in ['1st','2nd','3rd','4th'] %}
+                  <option value="{{ y }}" {% if student.year == y %}selected{% endif %}>{{ y }} Year</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Enrollment</label>
+              <input type="text" name="enrollment" class="form-control" value="{{ student.enrollment }}">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Emergency Contact</label>
+              <input type="text" name="emergency_contact" class="form-control" value="{{ student.emergency_contact }}">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Relation</label>
+              <input type="text" name="relation" class="form-control" value="{{ student.relation }}">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Blood Group</label>
+              <select name="blood_group" class="form-select">
+                {% for bg in ['A+','A-','B+','B-','AB+','AB-','O+','O-'] %}
+                  <option value="{{ bg }}" {% if student.blood_group == bg %}selected{% endif %}>{{ bg }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="form-group full-width">
+              <label class="form-label">Address</label>
+              <textarea name="address" class="form-control">{{ student.address }}</textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="btn-group">
+          <button type="submit" class="btn-dashboard">
+            <span>Update Student</span>
+          </button>
+
+          <a href="{{ url_for('admin_dashboard') }}" class="btn-dashboard">
+            <span>Back</span>
+          </a>
+        </div>
+      </form>
+
+      <form method="post" action="{{ url_for('delete_student', student_id=student.id) }}" onsubmit="return confirm('⚠️ Are you sure you want to delete this record permanently?');">
+        <div class="btn-group" style="margin-top:1.5rem;">
+          <button type="submit" class="btn-dashboard">
+            <span>Delete Student</span>
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
+
+<script>
+document.getElementById('student_image').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (file) {
+    const imgEl = document.querySelector('div[style*="border-radius:50%"] img');
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+      if (imgEl) imgEl.src = evt.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+});
+</script>
+
+{% endblock %}

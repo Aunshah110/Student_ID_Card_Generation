@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Assistant</title>
+
+<style>
+/* ------------------------ */
+/*      GLOBAL RESET        */
+/* ------------------------ */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Segoe UI", sans-serif;
+}
+
+/* ------------------------ */
+/*      MAIN WRAPPER        */
+/* ------------------------ */
+.chat-wrapper {
+    height: 100vh;
+    width: 100%;
+    background: #f3efea;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* ------------------------ */
+/*         HEADER           */
+/* ------------------------ */
+.header {
+    background: #b07a49;
+    padding: 14px 18px;
+    color: white;
+    font-size: 15px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.header .icon {
+    background: white;
+    color: #b07a49;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 13px;
+}
+
+/* ------------------------ */
+/*        MESSAGES          */
+/* ------------------------ */
+.messages {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    background: #f8f5f1;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+/* Scrollbar styling */
+.messages::-webkit-scrollbar { width: 6px; }
+.messages::-webkit-scrollbar-thumb {
+    background: #c8b7a7;
+    border-radius: 6px;
+}
+
+/* ------------------------ */
+/*       MESSAGE BOXES      */
+/* ------------------------ */
+.message {
+    padding: 12px 15px;
+    font-size: 14px;
+    line-height: 1.45;
+    max-width: 85%;
+    border-radius: 12px;
+    word-wrap: break-word;
+}
+
+.user {
+    background: #b07a49;
+    color: white;
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+    box-shadow: 0 3px 10px rgba(176,122,73,0.3);
+}
+
+.ai {
+    background: white;
+    color: #333;
+    border: 1px solid #e4d8cd;
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+}
+
+/* ------------------------ */
+/*          INPUT           */
+/* ------------------------ */
+.input-box {
+    padding: 12px;
+    border-top: 1px solid #d8c7b6;
+    display: flex;
+    background: #fff;
+}
+
+#ai-input {
+    flex: 1;
+    padding: 12px;
+    border: 1px solid #d1c5bb;
+    border-radius: 10px;
+    outline: none;
+    font-size: 14px;
+    transition: 0.2s ease;
+}
+
+#ai-input:focus {
+    border-color: #b07a49;
+    box-shadow: 0 0 5px rgba(176,122,73,0.5);
+}
+</style>
+</head>
+
+<body>
+
+<div class="chat-wrapper">
+    <div class="header">
+        <div class="icon">AI</div>
+        KAZMI – AI Assistant
+    </div>
+
+    <div id="ai-msgs" class="messages"></div>
+
+    <div class="input-box">
+        <input id="ai-input" placeholder="Type your message..." />
+    </div>
+</div>
+
+<!-- SAME LOGIC (unchanged) -->
+<script>
+const msgs = document.getElementById("ai-msgs");
+const input = document.getElementById("ai-input");
+
+// Welcome message
+window.onload = () => {
+    const welcome = document.createElement("div");
+    welcome.className = "message ai";
+    welcome.textContent = "Hello! I'm KAZMI AI Assistant. I can help you navigate to different admin pages, manage batches, departments and perform admin tasks. How may I help you?";
+    msgs.appendChild(welcome);
+};
+
+// Handle Enter
+input.addEventListener("keypress", async (e) => {
+    if (e.key !== "Enter") return;
+
+    const text = input.value.trim();
+    if (!text) return;
+
+    // Show user message
+    const userMsg = document.createElement("div");
+    userMsg.className = "message user";
+    userMsg.textContent = text;
+    msgs.appendChild(userMsg);
+
+    input.value = "";
+    input.disabled = true;
+    msgs.scrollTop = msgs.scrollHeight;
+
+    try {
+        const response = await fetch("http://localhost:5000/ai/message", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: text })
+        });
+
+        const data = await response.json();
+
+        const aiMsg = document.createElement("div");
+        aiMsg.className = "message ai";
+        
+        // 🎯 Handle close chat action - SIMPLE: Show message and refresh
+        if (data.action === "close_chat") {
+            aiMsg.textContent = data.message || "👋 See you next time!";
+            aiMsg.style.color = "#8b5cf6";
+            aiMsg.style.fontWeight = "bold";
+            
+            msgs.appendChild(aiMsg);
+            msgs.scrollTop = msgs.scrollHeight;
+            
+            // Simple solution: Refresh page after delay
+            setTimeout(() => {
+                window.top.location.reload(); // Refresh the page
+            }, data.delay || 3500);
+            
+        }
+        // 🎯 Handle logout action
+        else if (data.action === "logout") {
+            aiMsg.textContent = data.message || "👋 Goodbye Admin, logging out!";
+            aiMsg.style.color = "#f59e0b";
+            aiMsg.style.fontWeight = "bold";
+            
+            msgs.appendChild(aiMsg);
+            msgs.scrollTop = msgs.scrollHeight;
+            
+            setTimeout(() => {
+                window.top.location.href = data.redirect_url || "/logout";
+            }, data.delay || 7000);
+            
+        }
+        // 🎯 Handle redirect responses
+        else if (data.redirect_url && data.action === "redirect") {
+            aiMsg.textContent = data.message || "Redirecting...";
+            aiMsg.style.color = "#10b981";
+            aiMsg.style.fontWeight = "bold";
+            
+            msgs.appendChild(aiMsg);
+            msgs.scrollTop = msgs.scrollHeight;
+            
+            setTimeout(() => {
+                window.top.location.href = data.redirect_url;
+            }, 1500);
+            
+        } else {
+            // Normal AI response
+            aiMsg.textContent = data.message || "No response from AI.";
+            msgs.appendChild(aiMsg);
+            msgs.scrollTop = msgs.scrollHeight;
+        }
+
+    } catch (error) {
+        const err = document.createElement("div");
+        err.className = "message ai";
+        err.textContent = "⚠ Error communicating with AI service.";
+        err.style.color = "#ef4444";
+        msgs.appendChild(err);
+        msgs.scrollTop = msgs.scrollHeight;
+    } finally {
+        input.disabled = false;
+        input.focus();
+    }
+});
+</script>
+
+</body>
+</html>

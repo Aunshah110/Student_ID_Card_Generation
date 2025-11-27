@@ -1,0 +1,795 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  :root{
+    --black: #070707;
+    --brown-dark: #3e2a1f;
+    --brown-mid: #7a5230;
+    --brown-light: #d2a679;
+    --cream: #f5f5dc;
+    --yellow: #FFD24A;
+    --glass: rgba(255,255,255,0.06);
+    --card-bg: rgba(18,14,12,0.72);
+    --accent: linear-gradient(90deg, #b07a49, #8b5a2b);
+    --transition: all 0.28s cubic-bezier(.2,.9,.3,1);
+  }
+
+  body{
+    background: linear-gradient(135deg, var(--brown-light) 0%, var(--cream) 100%);
+    min-height:100vh;
+    margin:0;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--cream);
+  }
+
+  body::before{
+    content:"";
+    position:fixed;
+    width:300%;
+    height:300%;
+    top:-100%; left:-100%;
+    background: radial-gradient(circle, rgba(255,255,255,0.08) 10%, transparent 10.5%);
+    background-size: 30px 30px;
+    animation: float 20s infinite linear;
+    z-index:-1;
+  }
+  @keyframes float {
+    0% { transform: translate(0,0) rotate(0deg); }
+    100% { transform: translate(-30px,-30px) rotate(360deg); }
+  }
+
+  .navbar{
+    position: fixed !important;
+    top:0; left:0; right:0;
+    z-index:9999;
+    background: rgba(112,62,35,0.9);
+    border-bottom: 2px solid var(--yellow);
+  }
+
+  .admin-wrapper{
+    padding: calc(150px + 1.5rem) 1.25rem 4rem;
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    min-height: calc(100vh - 80px);
+  }
+
+  .dashboard-card{
+    width: min(1200px, 98%);
+    background: rgba(112,62,35,0.9);
+    border-bottom: 2px solid var(--yellow);
+    border-radius: 16px;
+    padding: clamp(15px, 3.6vw, 34px);
+    box-shadow: 0 20px 40px rgba(15,10,8,0.35), inset 0 1px 0 rgba(255,255,255,0.03);
+    position:relative;
+    overflow:hidden;
+    backdrop-filter: blur(8px);
+  }
+
+  .dashboard-card::before{
+    content:"";
+    position:absolute; top:0; left:0; right:0;
+    height:6px;
+    background: linear-gradient(90deg, rgba(255,210,120,0.95), rgba(139,115,85,0.95));
+    border-top-left-radius:16px; border-top-right-radius:16px;
+    box-shadow: 0 6px 20px rgba(255,210,120,0.06);
+  }
+
+  h1,h2,h4{
+    color: var(--yellow);
+    text-align:center;
+    font-weight:800;
+    margin-bottom:1.4rem;
+    text-shadow: 0 3px 6px rgba(0,0,0,0.35);
+  }
+
+  form{
+    width:100%;
+    display:flex;
+    flex-wrap:wrap;
+    gap:1.2rem;
+    justify-content:center;
+    margin-bottom:2rem;
+  }
+
+  label{
+    font-weight:600;
+    color: var(--cream);
+  }
+
+  .form-select, .form-control{
+    border-radius:10px;
+    padding:10px 14px;
+    border:2px solid var(--brown-mid);
+    background: var(--cream);
+    color: var(--black);
+    transition: var(--transition);
+  }
+
+  .form-select:focus, .form-control:focus{
+    outline:none;
+    border-color: var(--yellow);
+    box-shadow: 0 0 0 4px rgba(246,245,244,0.25);
+  }
+
+  .filter-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.2rem;
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto 2rem;
+}
+
+.filter-form .form-group {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.filter-form label {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+  color: var(--cream);
+}
+
+.filter-form .form-select {
+  font-size: 1rem;
+  height: 45px;
+  border-radius: 10px;
+}
+
+.filter-form .btn-dashboard {
+  width: 60%;
+  max-width: 250px;
+}
+
+  .btn-dashboard{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:12px;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight:800;
+    color: var(--black);
+    background: linear-gradient(180deg, var(--yellow), #f6c95a);
+    border: 2px solid rgba(0,0,0,0.08);
+    text-transform:uppercase;
+    letter-spacing:0.7px;
+    transition: var(--transition);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+  }
+  
+/* Edit button */
+.btn-dashboard.edit-student {
+  min-width: 140px;  /* fixed width */
+  height: 45px;
+  padding: 0 12px;
+  font-size: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+/* Generate ID button - slightly wider */
+.btn-dashboard.preview-id {
+  min-width: 140px;  /* slightly wider */
+  height: 45px;
+  padding: 0 14px;
+  font-size: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+
+
+  .btn-dashboard:hover{
+    transform: translateY(-6px) scale(1.03);
+    letter-spacing: 1.5px;
+    box-shadow: 0 18px 40px rgba(255,210,74,0.25),
+                0 8px 18px rgba(0,0,0,0.55),
+                inset 0 -8px 28px rgba(0,0,0,0.08);
+  }
+
+  table{
+    width:100%;
+    border-collapse:collapse;
+    background: rgba(255,255,255,0.04);
+    border-radius:12px;
+    overflow:hidden;
+    margin-top:1rem;
+  }
+
+  thead{
+    background: var(--brown-dark);
+    color: var(--cream);
+  }
+
+  th,td{
+    padding:12px;
+    text-align:left;
+    border-bottom:1px solid rgba(255,255,255,0.08);
+    color: var(--black);
+    background: rgba(255,255,255,0.85);
+  }
+
+  td[data-label="Edit"] .btn-dashboard {
+  position: relative;  /* ensures it's on top */
+  z-index: 1;
+}
+
+
+  tr:hover td{ background: rgba(255,210,74,0.25); }
+
+  /* Responsive Table */
+  @media (max-width:720px){
+    table, thead, tbody, th, td, tr{ display:block; }
+    thead{ display:none; }
+    tr{ margin-bottom:14px; border-radius:10px; overflow:hidden; }
+    td{ padding:10px; display:flex; justify-content:space-between; }
+    td::before{
+      content: attr(data-label);
+      font-weight:bold;
+      color: var(--brown-dark);
+    }
+  }
+</style>
+
+<div class="admin-wrapper">
+  <div class="dashboard-card">
+    <h1>Generate Student ID Cards</h1>
+
+<!-- Filter Form -->
+<form method="post" class="filter-form">
+  <div class="form-group w-100">
+    <label for="batch">Batch</label>
+    <select name="batch" id="batch" class="form-select">
+      <option value="" disabled selected>Select the Batch</option>
+      {% for b in batches %}
+        <option value="{{ b }}" {% if request.form.get('batch') == b %}selected{% endif %}>{{ b }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="form-group w-100">
+    <label for="department">Department</label>
+    <select name="department" id="department" class="form-select">
+      <option value="" disabled selected>Select the Department</option>
+      {% for d in departments %}
+        <option value="{{ d }}" {% if request.form.get('department') == d %}selected{% endif %}>{{ d }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="form-group w-100 text-center mt-3">
+    <button type="submit" class="btn-dashboard"><span>Filter</span></button>
+  </div>
+</form>
+
+
+    <!-- In your admin_dashboard.html - Update the table section -->
+      <!-- Updated table -->
+      {% if students %}
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Image</th>
+                <th>Name</th>
+                <th>Roll No</th>
+                <th>Department</th>
+                <th>Batch</th>
+                <th>Year</th>
+                <th>Edit</th> 
+                <th>Generate ID</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for student in students %}
+                <tr id="student-row-{{ student[0] }}">
+                  <td data-label="Image" style="vertical-align: middle; min-width: 160px;">
+                    <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:6px 0;">
+                      {% if student[8] and 'qrcode' not in student[8].lower() and 'qr_code' not in student[8].lower() %}
+                        <img src="{{ url_for('static', filename=student[8]) }}"
+                             alt="Student Photo"
+                             style="width:70px; height:70px; border-radius:8px; object-fit:cover; border:2px solid var(--yellow); display:block;"
+                             class="student-photo"
+                             data-student-id="{{ student[0] }}">
+                      {% endif %}
+                      <input type="file"
+                             data-student-id="{{ student[0] }}"
+                             class="form-control image-input"
+                             style="width:100%; max-width:130px; font-size:0.85rem; padding:5px 8px; border-radius:6px; border:1px solid var(--brown-mid); background:var(--cream); color:var(--black); text-align:center;">
+                    </div>
+                  </td>
+                
+                  <td data-label="Name">{{ student[1] }}</td>
+                  <td data-label="Roll No">{{ student[3] }}</td>
+                  <td data-label="Department">{{ student[4] }}</td>
+                  <td data-label="Batch">{{ student[5] }}</td>
+                  <td data-label="Year">{{ student[6] }}</td>
+                
+                  <!-- Edit Button as a standard dashboard button -->
+                
+                  <td data-label="Edit">
+                      <a href="{{ url_for('edit_student', student_id=student[0]) }}" class="btn-dashboard table-btn edit-student" style="text-decoration: none;">
+                          <span>Edit</span>
+                      </a>
+                  </td>
+                
+                  <!-- Generate ID Button -->
+                  <td data-label="Generate ID">
+                    <button class="btn-dashboard table-btn  preview-id" data-student-id="{{ student[0] }}">
+                      <span>Generate ID</span>
+                    </button>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p class="text-center text-light mt-3">No students found. Please filter by Batch or Department.</p>
+      {% endif %}
+
+  </div>
+</div>
+
+<!-- Modal -->
+<!-- Modal -->
+<div class="modal fade" id="idModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Student ID Preview</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="id-modal-body"></div>
+      <div class="modal-footer">
+        <button id="downloadImageBtn" class="btn btn-success">Download Image</button>
+        <button id="downloadPdfBtn" class="btn btn-primary">Download PDF</button>
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  // Bootstrap modal instance
+  const idModalEl = document.getElementById("idModal");
+  const idModal = new bootstrap.Modal(idModalEl);
+  const modalBody = document.getElementById("id-modal-body");
+
+  // Temporary storage for uploaded images keyed by student id
+  const imagePreviews = {};
+  let currentStudentId = null;
+
+  /* ---------------------------
+     Image upload & immediate preview
+     ---------------------------*/
+  document.querySelectorAll(".image-input").forEach(input => {
+    input.addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      const studentId = input.dataset.studentId;
+      if (!file) return;
+
+      if (!file.type.startsWith("image/")) {
+        alert("Please select an image file.");
+        return;
+      }
+
+      // Read file as DataURL
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const dataUrl = ev.target.result;
+        
+        // Update table preview immediately
+        let img = input.parentElement.querySelector("img");
+        if (!img) {
+          img = document.createElement("img");
+          img.style.width = "50px";
+          img.style.height = "50px";
+          img.style.marginTop = "6px";
+          img.style.borderRadius = "6px";
+          img.style.objectFit = "cover";
+          img.className = "student-photo";
+          img.dataset.studentId = studentId;
+          input.parentElement.appendChild(img);
+        }
+        img.src = dataUrl;
+
+        // Store preview for later use
+        imagePreviews[studentId] = dataUrl;
+
+        // If modal currently shows this student, update modal image now
+        if (idModalEl.classList.contains("show") && currentStudentId === studentId) {
+          setTimeout(() => updateModalImage(dataUrl), 0);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  });
+
+  // Helper: update student photo inside modal
+  function updateModalImage(dataUrl) {
+    if (!modalBody) return;
+    
+    // Try multiple selectors to find the student photo in modal
+    const selectors = [
+      ".student-photo img",
+      ".photo-box img", 
+      ".id-card img",
+      ".card-container img",
+      "#id-card img",
+      "img[alt*='student']",
+      "img[alt*='photo']",
+      "img[alt*='Student']"
+    ];
+    
+    let photoImg = null;
+    for (const selector of selectors) {
+      photoImg = modalBody.querySelector(selector);
+      if (photoImg) break;
+    }
+    
+    // If no img found, look for any img tag
+    if (!photoImg) {
+      const imgs = modalBody.querySelectorAll('img');
+      if (imgs.length > 0) {
+        // Use the first image that's not a logo or QR code
+        for (let img of imgs) {
+          if (!img.src.includes('logo') && !img.alt?.toLowerCase().includes('qr') && !img.src.includes('qrcode')) {
+            photoImg = img;
+            break;
+          }
+        }
+        if (!photoImg && imgs.length > 0) {
+          photoImg = imgs[0]; // Fallback to first image
+        }
+      }
+    }
+    
+    if (photoImg) {
+      console.log("Updating modal image with:", dataUrl);
+      photoImg.src = dataUrl;
+      photoImg.style.display = 'block';
+    } else {
+      console.log("No image element found in modal to update");
+      // Try to find a container that might hold the image
+      const photoContainer = modalBody.querySelector('.student-photo, .photo-box, .photo-container');
+      if (photoContainer) {
+        photoContainer.innerHTML = `<img src="${dataUrl}" alt="Student Photo" style="width:100%;height:100%;object-fit:cover;">`;
+      }
+    }
+  }
+
+  /* ---------------------------
+     Open preview modal and inject fetched HTML
+     ---------------------------*/
+  document.querySelectorAll(".preview-id").forEach(btn => {
+    btn.addEventListener("click", async (ev) => {
+      const studentId = btn.dataset.studentId;
+      currentStudentId = studentId;
+
+      // Loading UI
+      const originalHTML = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...';
+
+      try {
+        const res = await fetch(`/admin/id_preview/${studentId}`);
+        if (!res.ok) throw new Error("Failed to load ID preview");
+        const html = await res.text();
+
+        // Inject HTML into modal body
+        modalBody.innerHTML = html;
+
+        // If we have an uploaded preview image for this student, set it into modal
+        if (imagePreviews[studentId]) {
+          console.log("Setting uploaded image in modal");
+          setTimeout(() => updateModalImage(imagePreviews[studentId]), 100);
+        } else {
+          // Check if there's a database image and ensure it's loaded
+          const dbImage = document.querySelector(`img[data-student-id="${studentId}"]`);
+          if (dbImage && dbImage.src) {
+            console.log("Setting database image in modal");
+            setTimeout(() => updateModalImage(dbImage.src), 100);
+          }
+        }
+
+        idModal.show();
+      } catch (err) {
+        console.error("ID Preview Error:", err);
+        alert("Error loading ID preview. Check console for details.");
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalHTML;
+      }
+    });
+  });
+  /* ---------------------------
+     Handle Download as Image (PNG) - PERFECT A4 PAGES (Full size, centered)
+     ---------------------------*/
+  const downloadImageBtn = document.getElementById("downloadImageBtn");
+  if (downloadImageBtn) {
+    downloadImageBtn.addEventListener("click", async () => {
+      try {
+        const originalText = downloadImageBtn.innerHTML;
+        downloadImageBtn.innerHTML =
+          '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Generating Images...';
+        downloadImageBtn.disabled = true;
+
+        // --- START CARD ISOLATION (More robust check) ---
+
+        let frontSide = modalBody.querySelector(".card:first-child"); 
+        let backSide = modalBody.querySelector(".card:last-child"); 
+
+        // If .card:first-child and .card:last-child are the same element, and we have only one card, clone it
+        if (frontSide === backSide && modalBody.querySelectorAll(".card").length === 1) {
+          // Attempt to find a container
+          const cardContainer = modalBody.querySelector(".card-container") || modalBody.querySelector("#id-card");
+          if (cardContainer) {
+            frontSide = cardContainer.querySelector(".card:first-child");
+            backSide = cardContainer.querySelector(".card:last-child");
+          }
+
+          // If still only one card found, clone it for the back (assuming a front-only view for a two-page output)
+          if (frontSide === backSide) {
+            backSide = frontSide.cloneNode(true);
+          }
+        }
+       
+        // Final check before proceeding
+        if (!frontSide || !backSide) {
+          throw new Error("Could not isolate ID card front and back sides for download.");
+        }
+
+        // --- END CARD ISOLATION ---
+
+        // Ensure all images are fully loaded within both sides
+        const allImgs = [...frontSide.querySelectorAll("img"), ...backSide.querySelectorAll("img")];
+        await Promise.all(
+          Array.from(allImgs).map(
+            (img) =>
+              new Promise((resolve) => {
+                if (img.complete) resolve();
+                else {
+                  img.onload = img.onerror = () => resolve();
+                }
+              })
+          )
+        );
+
+        // Function to create an A4 page with a centered card
+        const createCenteredA4Page = async (cardElement, pageTitle) => {
+          // Create a temporary container to hold just the card to measure its actual rendered size
+          const tempCardWrapper = document.createElement("div");
+          tempCardWrapper.style.position = "absolute";
+          tempCardWrapper.style.left = "-9999px"; // Off-screen
+          tempCardWrapper.style.top = "0";
+          tempCardWrapper.style.zIndex = "100"; // Ensure it's in a stackable context
+          tempCardWrapper.style.display = 'block'; 
+          
+          // Clone the card again to remove any previous transforms/sizing specific to the modal context
+          const cardToCapture = cardElement.cloneNode(true);
+          
+          // Enforce styles for clean, native rendering before capture
+          cardToCapture.style.width = '360px'; // Assuming this is your intended card width
+          cardToCapture.style.height = '560px'; // Assuming this is your intended card height
+          cardToCapture.style.transform = 'none';
+          cardToCapture.style.margin = '0';
+          cardToCapture.style.padding = '0';
+          cardToCapture.style.boxShadow = 'none'; 
+          tempCardWrapper.appendChild(cardToCapture);
+          document.body.appendChild(tempCardWrapper);
+
+          // A4 dimensions in pixels at 96 DPI (approx 794x1123 for A4 portrait)
+          const a4WidthPx = 794 * 3; 
+          const a4HeightPx = 1123 * 3;
+          
+          // Render the card onto a temporary canvas at a high scale
+          const cardRenderCanvas = await html2canvas(cardToCapture, {
+            scale: 3, 
+            useCORS: true,
+            allowTaint: false,
+            backgroundColor: null, 
+            logging: false,
+          });
+
+          // IMPORTANT: Clean up temp wrapper immediately after capture
+          document.body.removeChild(tempCardWrapper); 
+
+          // **CRUCIAL CHECK FOR "UNDEFINED" ERROR**
+          if (!cardRenderCanvas || cardRenderCanvas.width === 0) {
+            throw new Error("html2canvas failed to capture the card content.");
+          }
+
+          // Create a full A4 canvas
+          const pageCanvas = document.createElement('canvas');
+          pageCanvas.width = a4WidthPx; 
+          pageCanvas.height = a4HeightPx;
+          const ctx = pageCanvas.getContext('2d');
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+
+          // Add title
+          if (pageTitle) {
+            ctx.font = 'bold 60px Inter, Arial, sans-serif'; // Adjust font size for scaled canvas
+            ctx.fillStyle = '#333333';
+            ctx.textAlign = 'center';
+            // Center title horizontally, place near top
+            ctx.fillText(pageTitle, pageCanvas.width / 2, 180); 
+          }
+
+          // Calculate position to center the card on the A4 page
+          // cardRenderCanvas is already at scale 3
+          const scaledCardWidth = cardRenderCanvas.width;
+          const scaledCardHeight = cardRenderCanvas.height;
+
+          const centerX = (pageCanvas.width - scaledCardWidth) / 2;
+          // Adjust Y to account for title and center the card in the *remaining* space
+          const titleBottomPadding = pageTitle ? 250 : 0; // Space for title + padding
+          const centerY = titleBottomPadding + (pageCanvas.height - titleBottomPadding - scaledCardHeight) / 2;
+
+          ctx.drawImage(cardRenderCanvas, centerX, centerY);
+
+          return pageCanvas.toDataURL("image/png", 1.0); // Highest quality PNG
+        };
+
+        console.log("Generating front page...");
+        const frontPageDataUrl = await createCenteredA4Page(frontSide, "STUDENT ID CARD - FRONT SIDE");
+        
+        console.log("Generating back page...");
+        const backPageDataUrl = await createCenteredA4Page(backSide, "STUDENT ID CARD - BACK SIDE");
+
+        // Create download function
+        const downloadImage = (dataUrl, filename) => {
+          const link = document.createElement("a");
+          link.href = dataUrl;
+          link.download = filename;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        };
+
+        // Download front page
+        console.log("Downloading front page...");
+        downloadImage(
+          frontPageDataUrl, 
+          `student_id_front_${currentStudentId || "unknown"}.png`
+        );
+
+        // Wait for download to start
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Download back page
+        console.log("Downloading back page...");
+        downloadImage(
+          backPageDataUrl, 
+          `student_id_back_${currentStudentId || "unknown"}.png`
+        );
+
+        console.log("Download completed successfully!");
+
+      } catch (error) {
+        // Now catching specific errors, and using the generic message if not available
+        console.error("Image Generation Error:", error);
+        alert("Error generating images: " + (error.message || "An unknown error occurred. Check the console."));
+      } finally {
+        downloadImageBtn.innerHTML = originalText;
+        downloadImageBtn.disabled = false;
+      }
+    });
+  }
+
+  /* ---------------------------
+     Handle Download as PDF - FIXED & STABLE VERSION
+     ---------------------------*/
+  const downloadPdfBtn = document.getElementById("downloadPdfBtn");
+  if (downloadPdfBtn) {
+    downloadPdfBtn.addEventListener("click", async () => {
+      let element = document.querySelector(".card-container");
+      if (!element) {
+        element = document.querySelector("#id-card");
+      }
+      if (!element) {
+        element = document.querySelector(".id-card");
+      }
+      if (!element) {
+        alert("No ID card found to download. Please generate an ID first.");
+        return;
+      }
+
+      try {
+        const originalText = downloadPdfBtn.innerHTML;
+        downloadPdfBtn.innerHTML =
+          '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Generating PDF...';
+        downloadPdfBtn.disabled = true;
+
+        // Ensure all images are fully loaded
+        const imgs = element.querySelectorAll("img");
+        await Promise.all(
+          Array.from(imgs).map(
+            (img) =>
+              new Promise((resolve) => {
+                if (img.complete) resolve();
+                else {
+                  img.onload = img.onerror = () => resolve();
+                }
+              })
+          )
+        );
+
+        // Create a high-quality clone
+        const clone = element.cloneNode(true);
+        clone.style.position = "fixed";
+        clone.style.left = "0";
+        clone.style.top = "0";
+        clone.style.zIndex = "9999";
+        clone.style.background = "#fff";
+        document.body.appendChild(clone);
+
+        // Capture with html2canvas
+        const canvas = await html2canvas(clone, {
+          scale: 3,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: "#ffffff",
+          logging: false,
+        });
+
+        document.body.removeChild(clone);
+
+        // Convert to PNG
+        const imgData = canvas.toDataURL("image/png");
+
+        // Create jsPDF instance
+        const { jsPDF } = window.jspdf;
+
+        // Get PDF dimensions
+        const pdf = new jsPDF({
+          orientation: "p",
+          unit: "px",
+          format: "a4",
+        });
+
+        // Calculate scaling to fit nicely in A4
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const imgWidth = pageWidth * 0.9;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+        // Center image on page
+        const x = (pageWidth - imgWidth) / 2;
+        const y = (pageHeight - imgHeight) / 2;
+
+        // Add image to PDF
+        pdf.addImage(imgData, "PNG", x, y, imgWidth, imgHeight);
+
+        // Save file
+        const fileName = `student_id_${currentStudentId || "unknown"}_${Date.now()}.pdf`;
+        pdf.save(fileName);
+      } catch (error) {
+        console.error("PDF Generation Error:", error);
+        alert("Error generating PDF: " + error.message);
+      } finally {
+        downloadPdfBtn.innerHTML = originalText;
+        downloadPdfBtn.disabled = false;
+      }
+    });
+  }
+});
+</script>
+<!-- Libraries -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+{% endblock %}

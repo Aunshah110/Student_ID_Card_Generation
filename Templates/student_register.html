@@ -1,0 +1,559 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  :root{
+    --black: #070707;
+    --brown-dark: #3e2a1f;
+    --brown-mid: #7a5230;
+    --brown-light: #d2a679;
+    --cream: #f5f5dc;
+    --yellow: #FFD24A;
+    --glass: rgba(255,255,255,0.06);
+    --card-bg: rgba(18,14,12,0.72);
+    --accent: linear-gradient(90deg, #b07a49, #8b5a2b);
+    --transition: all 0.28s cubic-bezier(.2,.9,.3,1);
+  }
+
+  /* Background with animated dots */
+  body{
+    background: linear-gradient(135deg, var(--brown-light) 0%, var(--cream) 100%);
+    min-height:100vh;
+    margin:0;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--cream);
+  }
+  body::before{
+    content:"";
+    position:fixed;
+    width:300%;
+    height:300%;
+    top:-100%; left:-100%;
+    background: radial-gradient(circle, rgba(255,255,255,0.08) 10%, transparent 10.5%);
+    background-size: 30px 30px;
+    animation: float 20s infinite linear;
+    z-index:-1;
+  }
+  @keyframes float {
+    0% { transform: translate(0,0) rotate(0deg); }
+    100% { transform: translate(-30px,-30px) rotate(360deg); }
+  }
+
+  /* Navbar pinned */
+  .navbar{
+    position: fixed !important;
+    top:0; left:0; right:0;
+    z-index:9999;
+    background: rgba(112,62,35,0.9);
+    border-bottom: 2px solid var(--yellow);
+  }
+
+  /* Wrapper */
+  .admin-wrapper{
+    padding: calc(150px + 1.5rem) 1.25rem 4rem;
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    min-height: calc(100vh - 80px);
+    box-sizing:border-box;
+  }
+
+  /* Card */
+  .dashboard-card{
+    width: min(980px, 98%);
+    background: rgba(112,62,35,0.9);
+    border-bottom: 2px solid var(--yellow);
+    border-radius: 16px;
+    padding: clamp(15px, 3.6vw, 34px);
+    box-shadow: 0 20px 40px rgba(15,10,8,0.35), inset 0 1px 0 rgba(255,255,255,0.03);
+    position:relative;
+    overflow:hidden;
+    backdrop-filter: blur(8px);
+  }
+  .dashboard-card::before{
+    content:"";
+    position:absolute; top:0; left:0; right:0;
+    height:6px;
+    background: linear-gradient(90deg, rgba(255,210,120,0.95), rgba(139,115,85,0.95));
+    border-top-left-radius:16px; border-top-right-radius:16px;
+    box-shadow: 0 6px 20px rgba(255,210,120,0.06);
+  }
+
+  .dashboard-inner{
+    display:flex;
+    flex-direction:column;
+    gap: clamp(14px, 2.4vw, 20px);
+    align-items:center;
+  }
+
+  /* Headings */
+  h1,h2,h3{
+    color: var(--yellow);
+    text-align:center;
+    font-weight:800;
+    margin-bottom:1rem;
+    text-shadow: 0 3px 6px rgba(0,0,0,0.35);
+  }
+
+  p {
+    text-align: center;
+    color: var(--cream);
+    font-size: clamp(0.9rem, 1.8vw, 1.05rem);
+    max-width: 700px;
+    margin: 0 auto 1.5rem;
+    line-height: 1.5;
+  }
+
+  /* Form Styles */
+  .form-container {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .form-section {
+    background: rgba(255,255,255,0.05);
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .form-section-title {
+    color: var(--yellow);
+    font-size: 1.4rem;
+    margin-bottom: 2rem;
+    text-align: center;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0.5rem;
+  }
+
+  .form-group.full-width {
+    grid-column: 1 / -1;
+  }
+
+  .form-label {
+    font-weight: 600;
+    color: var(--cream);
+    margin-bottom: 0.75rem;
+    font-size: 0.95rem;
+    display: block;
+  }
+
+  .form-control, .form-select, .form-control-file {
+    border-radius: 8px;
+    padding: 14px 16px;
+    border: 2px solid var(--brown-mid);
+    background: var(--cream);
+    color: var(--black);
+    transition: var(--transition);
+    width: 100%;
+    font-size: 1rem;
+    font-family: inherit;
+  }
+
+  .form-control:focus, .form-select:focus, .form-control-file:focus {
+    outline: none;
+    border-color: var(--yellow);
+    box-shadow: 0 0 0 3px rgba(255, 210, 74, 0.2);
+    background: #fff;
+  }
+
+  textarea.form-control {
+    resize: vertical;
+    min-height: 100px;
+    line-height: 1.5;
+  }
+
+  /* Required field indicator */
+  .required::after {
+    content: " *";
+    color: #ff6b6b;
+    font-weight: bold;
+  }
+
+  /* Form hints and small text */
+  .form-hint {
+    color: var(--cream);
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+    opacity: 0.8;
+    line-height: 1.4;
+  }
+
+  /* Buttons */
+  .btn-dashboard{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:12px;
+    padding: 14px 28px;
+    font-size: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    text-decoration:none;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:0.7px;
+    color: var(--black);
+    background: linear-gradient(180deg, var(--yellow), #f6c95a);
+    border: 2px solid rgba(0,0,0,0.08);
+    transition: var(--transition);
+    position:relative;
+    overflow:hidden;
+    cursor: pointer;
+    min-width: 160px;
+  }
+  .btn-dashboard::after{
+    content:""; position:absolute; top:0; left:-100%; width:100%; height:100%;
+    background: linear-gradient(120deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition:0.5s; z-index:1;
+  }
+  .btn-dashboard::before{
+    content:""; position:absolute; left:0; top:0; bottom:0; width:8px;
+    background: linear-gradient(180deg, var(--brown-mid), var(--brown-dark));
+    border-top-left-radius:12px; border-bottom-left-radius:12px;
+    transform:translateX(-6px);
+    transition: var(--transition);
+    opacity:0.95; z-index:2;
+  }
+  .btn-dashboard span{ position:relative; z-index:3; }
+  .btn-dashboard:hover{
+    transform: translateY(-4px) scale(1.02);
+    letter-spacing: 1px;
+    box-shadow: 0 12px 30px rgba(255,210,74,0.3),
+                0 6px 15px rgba(0,0,0,0.4),
+                inset 0 -6px 20px rgba(0,0,0,0.08);
+  }
+  .btn-dashboard:hover::before{ transform:translateX(0); width:12px; }
+  .btn-dashboard:hover::after{ left:100%; }
+  .btn-dashboard:active{
+    transform: translateY(-1px) scale(.995);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+  }
+
+  /* Secondary button */
+  .btn-secondary {
+    background: linear-gradient(180deg, var(--brown-mid), var(--brown-dark));
+    color: var(--cream);
+  }
+
+  /* Button Group */
+  .btn-group {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 2.5rem;
+  }
+
+  /* Contact info section specific styling */
+  .contact-section .form-grid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.2rem;
+  }
+
+  /* Responsive adjustments */
+  @media (max-width:768px){
+    .form-grid {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+    .form-section {
+      padding: 1.5rem;
+    }
+    .btn-group{ 
+      flex-direction:column; 
+      width:100%; 
+    }
+    .btn-dashboard{ 
+      width:100%; 
+      justify-content:center; 
+    }
+  }
+
+  @media (max-width:480px){
+    .form-section {
+      padding: 1rem;
+    }
+    .form-section-title {
+      font-size: 1.2rem;
+    }
+  }
+
+  /* Student application specific styles */
+  .student-application-title {
+    color: var(--yellow);
+    text-align: center;
+    margin-bottom: 2rem;
+    font-size: 1.8rem;
+  }
+
+  .application-notice {
+    background: rgba(255, 210, 74, 0.1);
+    border: 1px solid var(--yellow);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    text-align: center;
+  }
+
+  .application-notice h4 {
+    color: var(--yellow);
+    margin-bottom: 0.5rem;
+  }
+
+  .success-message {
+    background: rgba(46, 125, 50, 0.1);
+    border: 1px solid #2e7d32;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    text-align: center;
+  }
+
+  .success-message h4 {
+    color: #2e7d32;
+    margin-bottom: 0.5rem;
+  }
+</style>
+
+<div class="admin-wrapper">
+  <div class="dashboard-card" role="region" aria-label="Student Registration Section">
+    <div class="dashboard-inner">
+
+      <h1 class="student-application-title">Student Registration Form</h1>
+      
+      <div class="application-notice">
+        <h4>📝 Student Registration</h4>
+        <p>Please fill out all the required fields below to complete your student registration.</p>
+      </div>
+
+      <!-- Display flash messages -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            {% if category == 'success' %}
+              <div class="success-message">
+                <h4>✅ {{ message }}</h4>
+                <p>Your registration has been submitted successfully. You can now generate your student ID card.</p>
+              </div>
+            {% else %}
+              <div class="application-notice" style="background: rgba(244, 67, 54, 0.1); border-color: #f44336;">
+                <h4 style="color: #f44336;">⚠️ {{ message }}</h4>
+              </div>
+            {% endif %}
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <!-- Student Registration Form -->
+      <div class="form-container">
+        <div class="form-section">
+          <h3 class="form-section-title">Personal Information</h3>
+          
+          <form method="post" action="{{ url_for('student_register') }}" enctype="multipart/form-data">
+            <!-- Personal Information -->
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="name" class="form-label required">Student Name</label>
+                <input type="text" id="name" name="name" class="form-control" placeholder="Enter full name" required value="{{ request.form.name if request.form.name }}">
+              </div>
+
+              <div class="form-group">
+                <label for="father_name" class="form-label required">Father's Name</label>
+                <input type="text" id="father_name" name="father_name" class="form-control" placeholder="Enter father's name" required value="{{ request.form.father_name if request.form.father_name }}">
+              </div>
+
+              <div class="form-group">
+                <label for="cnic" class="form-label required">CNIC Number</label>
+                <input type="text" id="cnic" name="cnic" class="form-control" placeholder="XXXXX-XXXXXXX-X" required value="{{ request.form.cnic if request.form.cnic }}">
+                <div class="form-hint">Format: 12345-1234567-1</div>
+              </div>
+
+              <div class="form-group">
+                <label for="caste" class="form-label required">Caste</label>
+                <input type="text" id="caste" name="caste" class="form-control" placeholder="Enter caste" required value="{{ request.form.caste if request.form.caste }}">
+              </div>
+
+              <div class="form-group">
+                <label for="roll_no" class="form-label required">Roll Number</label>
+                <input type="text" id="roll_no" name="roll_no" class="form-control" placeholder="Enter roll number" required value="{{ request.form.roll_no if request.form.roll_no }}">
+              </div>
+
+              <!-- Batch dropdown -->
+              <div class="form-group">
+                <label for="batch" class="form-label required">Batch</label>
+                <select id="batch" name="batch" class="form-select" required>
+                  <option value="">Select Batch</option>
+                  {% for batch in batches %}
+                    <option value="{{ batch }}" {% if request.form.batch == batch %}selected{% endif %}>{{ batch }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              
+              <!-- Department dropdown -->
+              <div class="form-group">
+                <label for="department" class="form-label required">Department</label>
+                <select id="department" name="department" class="form-select" required>
+                  <option value="">Select Department</option>
+                  {% for department in departments %}
+                    <option value="{{ department }}" {% if request.form.department == department %}selected{% endif %}>{{ department }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="year" class="form-label required">Year</label>
+                <select id="year" name="year" class="form-select" required>
+                  <option value="">Select Year</option>
+                  <option value="1st" {% if request.form.year == '1st' %}selected{% endif %}>1ˢᵗ Year</option>
+                  <option value="2nd" {% if request.form.year == '2nd' %}selected{% endif %}>2ⁿᵈ Year</option>
+                  <option value="3rd" {% if request.form.year == '3rd' %}selected{% endif %}>3ʳᵈ Year</option>
+                  <option value="4th" {% if request.form.year == '4th' %}selected{% endif %}>4ᵗʰ Year</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="enrollment" class="form-label">Enrollment Number</label>
+                <input type="text" id="enrollment" name="enrollment" class="form-control" placeholder="Enter enrollment number" value="{{ request.form.enrollment if request.form.enrollment }}">
+              </div>
+            </div>
+
+            <!-- Contact & Medical Information -->
+            <h4>Contact & Medical Information</h4>
+            <div class="contact-section">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="emergency_contact" class="form-label">Emergency Contact</label>
+                  <input type="text" id="emergency_contact" name="emergency_contact" class="form-control" placeholder="03XX-XXXXXXX" value="{{ request.form.emergency_contact if request.form.emergency_contact }}">
+                  <div class="form-hint">Phone number without spaces</div>
+                </div>
+
+                <div class="form-group">
+                  <label for="relation" class="form-label">Relation with Emergency Contact</label>
+                  <input type="text" id="relation" name="relation" class="form-control" placeholder="Father, Mother, Guardian" value="{{ request.form.relation if request.form.relation }}">
+                </div>
+
+                <div class="form-group">
+                  <label for="blood_group" class="form-label">Blood Group</label>
+                  <select id="blood_group" name="blood_group" class="form-select">
+                    <option value="">Select Blood Group</option>
+                    <option value="A+" {% if request.form.blood_group == 'A+' %}selected{% endif %}>A+</option>
+                    <option value="A-" {% if request.form.blood_group == 'A-' %}selected{% endif %}>A-</option>
+                    <option value="B+" {% if request.form.blood_group == 'B+' %}selected{% endif %}>B+</option>
+                    <option value="B-" {% if request.form.blood_group == 'B-' %}selected{% endif %}>B-</option>
+                    <option value="AB+" {% if request.form.blood_group == 'AB+' %}selected{% endif %}>AB+</option>
+                    <option value="AB-" {% if request.form.blood_group == 'AB-' %}selected{% endif %}>AB-</option>
+                    <option value="O+" {% if request.form.blood_group == 'O+' %}selected{% endif %}>O+</option>
+                    <option value="O-" {% if request.form.blood_group == 'O-' %}selected{% endif %}>O-</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Address & Image -->
+            <h4>Address & Image</h4>
+            <div class="form-grid">
+              <div class="form-group full-width">
+                <label for="address" class="form-label">Address</label>
+                <textarea id="address" name="address" class="form-control" rows="3" placeholder="Enter complete address">{{ request.form.address if request.form.address }}</textarea>
+              </div>
+
+              <div class="form-group full-width">
+                <label for="student_image" class="form-label required">Student Photo</label>
+                <input type="file" id="student_image" name="student_image" accept="image/*" class="form-control-file" required>
+                <div class="form-hint">Upload a clear passport-size photo (JPG, PNG, max 2MB) - Required</div>
+              </div>
+            </div>
+
+            <div class="btn-group">
+              <button type="submit" class="btn-dashboard">
+                <span>Submit Registration</span>
+              </button>
+              <button type="reset" class="btn-dashboard">
+                <span>Reset Form</span>
+              </button>
+              <a href="{{ url_for('login') }}" class="btn-dashboard">
+                <span>Back to Home</span>
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // CNIC format validation
+  const cnicInput = document.getElementById('cnic');
+  if (cnicInput) {
+    cnicInput.addEventListener('input', function(e) {
+      let value = e.target.value.replace(/\D/g, '');
+      if (value.length > 0) {
+        if (value.length <= 5) {
+          value = value;
+        } else if (value.length <= 12) {
+          value = value.substring(0, 5) + '-' + value.substring(5, 12);
+        } else {
+          value = value.substring(0, 5) + '-' + value.substring(5, 12) + '-' + value.substring(12, 13);
+        }
+      }
+      e.target.value = value;
+    });
+  }
+
+  // Emergency contact number validation
+  const emergencyContact = document.getElementById('emergency_contact');
+  if (emergencyContact) {
+    emergencyContact.addEventListener('input', function(e) {
+      e.target.value = e.target.value.replace(/\D/g, '');
+    });
+  }
+
+  // File size validation
+  const fileInput = document.getElementById('student_image');
+  if (fileInput) {
+    fileInput.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const maxSize = 2 * 1024 * 1024; // 2MB
+        if (file.size > maxSize) {
+          alert('File size too large. Please select a file smaller than 2MB.');
+          e.target.value = '';
+        }
+      }
+    });
+  }
+
+  // Add focus styles for better accessibility
+  const formControls = document.querySelectorAll('.form-control, .form-select, .form-control-file');
+  formControls.forEach(control => {
+    control.addEventListener('focus', function() {
+      this.parentElement.classList.add('focused');
+    });
+    control.addEventListener('blur', function() {
+      this.parentElement.classList.remove('focused');
+    });
+  });
+});
+</script>
+
+{% endblock %}

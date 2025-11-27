@@ -1,0 +1,273 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  :root{
+    --black: #070707;
+    --brown-dark: #3e2a1f;
+    --brown-mid: #7a5230;
+    --brown-light: #d2a679;
+    --cream: #f5f5dc;
+    --yellow: #FFD24A;
+    --glass: rgba(255,255,255,0.06);
+    --card-bg: rgba(18,14,12,0.72);
+    --accent: linear-gradient(90deg, #b07a49, #8b5a2b);
+    --transition: all 0.28s cubic-bezier(.2,.9,.3,1);
+  }
+
+  /* Background with floating dots */
+  body{
+    background: linear-gradient(135deg, var(--brown-light) 0%, var(--cream) 100%);
+    min-height:100vh;
+    margin:0;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--cream);
+  }
+  body::before{
+    content:"";
+    position:fixed;
+    width:300%; height:300%;
+    top:-100%; left:-100%;
+    background: radial-gradient(circle, rgba(255,255,255,0.08) 10%, transparent 10.5%);
+    background-size: 30px 30px;
+    animation: float 20s infinite linear;
+    z-index:-1;
+  }
+  @keyframes float {
+    0% { transform: translate(0,0) rotate(0deg); }
+    100% { transform: translate(-30px,-30px) rotate(360deg); }
+  }
+
+  /* Navbar */
+  .navbar {
+    position: fixed !important;
+    top: 0; left: 0; right: 0;
+    z-index: 9999;
+    background: rgba(112, 62, 35, 0.9);
+    border-bottom: 2px solid var(--yellow);
+  }
+
+  /* Wrapper */
+  .admin-wrapper {
+    padding: calc(150px + 1.5rem) 1.25rem 4rem;
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    min-height: calc(100vh - 80px);
+    box-sizing:border-box;
+  }
+
+  /* Card */
+  .dashboard-card{
+    width: min(980px, 98%);
+    background: rgba(112, 62, 35, 0.9);
+    border-bottom: 2px solid var(--yellow);
+    border-radius: 16px;
+    padding: clamp(15px, 3.6vw, 34px);
+    box-shadow: 0 20px 40px rgba(15,10,8,0.35), inset 0 1px 0 rgba(255,255,255,0.03);
+    position:relative;
+    overflow:hidden;
+    backdrop-filter: blur(8px);
+  }
+  .dashboard-card::before{
+    content:"";
+    position:absolute; left:0; right:0; top:0;
+    height:6px;
+    background: linear-gradient(90deg, rgba(255,210,120,0.95), rgba(139,115,85,0.95));
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+    box-shadow: 0 6px 20px rgba(255,210,120,0.06);
+  }
+
+  .dashboard-inner{
+    display:flex;
+    flex-direction:column;
+    gap: clamp(14px, 2.4vw, 20px);
+    align-items:center;
+    width:100%;
+  }
+
+  /* Form */
+  form{
+    width:100%;
+    margin-top:1rem;
+    display:flex;
+    flex-direction:column;
+    gap:1.2rem;
+  }
+  .form-label { font-weight:600; color: var(--cream); }
+
+  .form-control {
+    border-radius: 10px;
+    padding: 10px 14px;
+    border: 2px solid var(--brown-mid);
+    background: var(--cream);
+    color: var(--black);
+    transition: var(--transition);
+    width:100%;
+  }
+  .form-control:focus {
+    outline:none;
+    border-color: var(--yellow);
+    box-shadow: 0 0 0 4px rgba(246, 245, 244, 0.25);
+  }
+
+  /* Buttons */
+ .btn-dashboard{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:12px;
+    width:100%;
+    max-width:420px;
+    padding: 12px 18px;
+    border-radius: 12px;
+    text-decoration:none;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:0.7px;
+    font-size: clamp(0.95rem, 1.8vw, 1.05rem);
+    color: var(--black);
+    background: linear-gradient(180deg, var(--yellow), #f6c95a);
+    border: 2px solid rgba(0,0,0,0.08);
+    box-shadow: 0 6px 18px rgba(122,82,48,0.12),
+                0 2px 6px rgba(0,0,0,0.35),
+                inset 0 -6px 24px rgba(0,0,0,0.06);
+    transition: var(--transition);
+    position:relative;
+    overflow:hidden;
+    align-self:center;
+  }
+  .btn-dashboard::after{
+    content:""; position:absolute; top:0; left:-100%; width:100%; height:100%;
+    background: linear-gradient(120deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition:0.5s; z-index:1;
+  }
+  .btn-dashboard::before{
+    content:""; position:absolute; left:0; top:0; bottom:0; width:8px;
+    background: linear-gradient(180deg, var(--brown-mid), var(--brown-dark));
+    border-top-left-radius:12px; border-bottom-left-radius:12px;
+    transform:translateX(-6px);
+    transition: var(--transition);
+    opacity:0.95; z-index:2;
+  }
+  .btn-dashboard span{ position:relative; z-index:3; }
+  .btn-dashboard:hover{
+    transform: translateY(-6px) scale(1.03);
+    letter-spacing: 1.5px;
+    box-shadow: 0 18px 40px rgba(255,210,74,0.25),
+                0 8px 18px rgba(0,0,0,0.55),
+                inset 0 -8px 28px rgba(0,0,0,0.08);
+  }
+  .btn-dashboard:hover::before{ transform:translateX(0); width:12px; }
+  .btn-dashboard:hover::after{ left:100%; }
+
+  .btn-dashboard:active{
+    transform: translateY(-2px) scale(.995);
+    box-shadow: 0 8px 18px rgba(0,0,0,0.35);
+  }
+
+  /* Table */
+  table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:1.5rem;
+    font-size:0.95rem;
+    background: rgba(255,255,255,0.04);
+    border-radius:12px;
+    overflow:hidden;
+  }
+  thead{
+    background: var(--brown-dark);
+    color: var(--cream);
+  }
+  th,td{
+    padding:12px;
+    text-align:left;
+    border-bottom:1px solid rgba(255,255,255,0.08);
+    color: var(--black);
+    background: rgba(255,255,255,0.85);
+  }
+  tr:hover td{ background: rgba(255,210,74,0.25); }
+
+    h1{
+    margin:0;
+    font-size: clamp(1.4rem, 3vw, 2rem);
+    font-weight:800;
+    color: var(--yellow);
+    text-align:center;
+    padding-top:8px;
+  }
+
+  /* Responsive */
+  @media (max-width:720px){
+    table, thead, tbody, th, td, tr{ display:block; }
+    thead{ display:none; }
+    tr{ margin-bottom:14px; border-radius:10px; overflow:hidden; }
+    td{ padding:10px; display:flex; justify-content:space-between; }
+    td::before{
+      content: attr(data-label);
+      font-weight:bold;
+      color: var(--brown-dark);
+    }
+  }
+</style>
+
+<div class="admin-wrapper">
+  <div class="dashboard-card" role="region" aria-label="Admin dashboard">
+    <div class="dashboard-inner">
+
+      <h1>Manage Departments</h1>
+      <!-- Add Department Form -->
+<form method="POST">
+  <div>
+    <label for="department_name" class="form-label">Department Name</label>
+    <input type="text" class="form-control" id="department_name" name="department_name" required>
+  </div>
+
+  <div>
+    <label for="degree" class="form-label">Degree</label>
+    <select class="form-control" id="degree" name="degree" required>
+      <option value="">-- Select Degree --</option>
+      <option value="Bachelor of Engineering Technology">Bachelor of Engineering Technology</option>
+      <option value="Bachelor of Science">Bachelor of Science</option>
+    </select>
+  </div>
+
+  <button type="submit" name="add_department" class="btn-dashboard"><span>Add Department</span></button>
+</form>
+
+<!-- Department Table -->
+<h1 class="mt-4">Departments</h1>
+<table>
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>Department Name</th>
+      <th>Degree</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for department in departments %}
+      <tr>
+        <td data-label="No.">{{ loop.index }}</td>
+        <td data-label="Department">{{ department[1] }}</td>
+        <td data-label="Degree">{{ department[2] }}</td>
+        <td data-label="Action">
+          <form method="POST" style="display:inline;">
+            <input type="hidden" name="department_id" value="{{ department[0] }}">
+            <button type="submit" name="delete_department" class="btn-dashboard btn-sm"><span>Delete</span></button>
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+
+    </div>
+  </div>
+</div>
+
+{% endblock %}

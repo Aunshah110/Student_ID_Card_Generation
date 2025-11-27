@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Student ID Card Generator{% endblock %}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.0/font/bootstrap-icons.css">
+
+  <style>
+    :root {
+      --brown-dark: #5a3620;
+      --brown-mid: #704023;
+      --brown-light: #d2b48c;
+      --gold: #daa520;
+    }
+
+    .navbar {
+      background: rgba(112, 62, 35, 0.9) !important;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+      border-bottom: 2px solid var(--gold);
+      min-height: 80px;
+      padding: 0.8rem 0;
+    }
+
+    .navbar-brand {
+      font-weight: 700;
+      font-size: 1.5rem;
+      color: var(--gold) !important;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .nav-link {
+      color: #fff !important;
+      font-weight: 500;
+      margin: 0 8px;
+      transition: color 0.3s ease;
+      position: relative;
+    }
+
+    .nav-link::after {
+      content: "";
+      position: absolute;
+      bottom: -5px;
+      left: 50%;
+      width: 0%;
+      height: 2px;
+      background-color: var(--gold);
+      transition: all 0.3s ease-in-out;
+      transform: translateX(-50%);
+    }
+
+    .nav-link:hover::after {
+      width: 60%;
+    }
+
+    .nav-link:hover {
+      color: var(--gold) !important;
+    }
+
+        /* Logout Button */
+    .btn-logout {
+      background: linear-gradient(135deg, var(--gold), var(--brown-light));
+      border: none;
+      border-radius: 8px;
+      padding: 8px 16px; /* Slightly increased padding */
+      font-weight: 600;
+      color: var(--brown-dark);
+      margin-left: 1rem;
+      transition: all 0.3s ease;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+    }
+
+    .btn-logout:hover {
+      background: linear-gradient(135deg, var(--brown-light), var(--gold));
+      box-shadow: 0 5px 12px rgba(0, 0, 0, 0.4);
+      transform: translateY(-2px);
+    }
+
+        /* Alert message positioning - FIXED */
+    .alert-container {
+      position: fixed;
+      top: 80px; /* Matches the navbar height */
+      left: 0;
+      right: 0;
+      z-index: 1030; /* Below navbar (1040) but above content */
+      padding: 0 15px;
+    }
+
+    .alert {
+      margin: 15px auto;
+      max-width: 1200px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      border: none;
+      border-radius: 8px;
+      animation: slideDown 0.3s ease-out;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .main-content {
+      padding-top: 20px;
+    }
+  </style>
+</head>
+<body class="bg-light">
+
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+    <div class="container">
+      <a class="navbar-brand" href="/">
+        <i class="bi bi-mortarboard-fill"></i> Student ID System
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link {% if request.endpoint=='admin_dashboard' %}active{% endif %}" href="{{ url_for('home') }}">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if request.endpoint=='admin_dashboard' %}active{% endif %}" href="{{ url_for('admin_dashboard') }}">Admin</a>
+          </li>
+        </ul>
+        {% if 'user_id' in session %}
+          <a href="{{ url_for('logout') }}" class="btn btn-logout">Logout</a>
+        {% endif %}
+      </div>
+    </div>
+  </nav>
+
+  <!-- Alert Messages Container - FIXED POSITION -->
+  <div class="alert-container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show" data-auto-dismiss="4000">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+  </div>
+
+  <!-- Main Content -->
+  <div class="container main-content">
+    {% block content %}{% endblock %}
+  </div>
+
+  {% if 'user_id' in session %}
+<!-- ==================== AI CHAT WIDGET (Admin Only) ==================== -->
+
+<div id="ai-chat-widget" style="
+  position: fixed;
+  bottom: 85px;
+  right: 28px;
+  width: 340px;
+  height: 430px;
+  max-height: 75vh; 
+  background: rgba(255, 255, 255, 0.98);
+  border-radius: 18px;
+  box-shadow: 0 10px 35px rgba(0,0,0,0.25);
+  overflow: hidden;
+  display: none;
+  z-index: 99999;
+  border: 2px solid #b07a49;
+  transform: translateY(20px);
+  opacity: 0;
+  transition: all 0.35s ease;
+">
+  <iframe src="/ai/chat" style="width:100%;height:100%;border:none;"></iframe>
+</div>
+
+<!-- Floating Button -->
+<button id="ai-toggle-btn" style="
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
+  background: #b07a49;
+  color: white;
+  padding: 12px 18px;
+  border-radius: 50px;
+  font-weight: bold;
+  border: none;
+  z-index: 100000;
+  cursor: pointer;
+  font-size: 14px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+  transition: background 0.2s ease, transform 0.2s ease;
+">
+  💬 AI Assistant
+</button>
+
+<!-- ===================================================================== -->
+{% endif %}
+
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Auto-dismiss alerts after 6 seconds
+    document.addEventListener('DOMContentLoaded', function() {
+      const alerts = document.querySelectorAll('.alert[data-auto-dismiss]');
+      
+      alerts.forEach(alert => {
+        const dismissTime = parseInt(alert.getAttribute('data-auto-dismiss'));
+        
+        setTimeout(() => {
+          const bsAlert = new bootstrap.Alert(alert);
+          bsAlert.close();
+        }, dismissTime);
+      });
+      
+      // Adjust content position when alerts are dismissed
+      const alertContainer = document.querySelector('.alert-container');
+      const originalAlerts = alertContainer.querySelectorAll('.alert').length;
+      let dismissedAlerts = 0;
+      
+      alertContainer.addEventListener('closed.bs.alert', function() {
+        dismissedAlerts++;
+        if (dismissedAlerts === originalAlerts) {
+          // All alerts are dismissed, we could adjust layout if needed
+        }
+      });
+    });
+
+    const widget = document.getElementById("ai-chat-widget");
+const btn = document.getElementById("ai-toggle-btn");
+let isOpen = false;
+
+btn.onclick = () => {
+  isOpen = !isOpen;
+
+  if (isOpen) {
+    widget.style.display = "block";
+
+    setTimeout(() => {
+      widget.style.opacity = "1";
+      widget.style.transform = "translateY(0)";
+    }, 10);
+
+    btn.style.transform = "scale(1.05)";
+  } else {
+    widget.style.opacity = "0";
+    widget.style.transform = "translateY(20px)";
+
+    setTimeout(() => {
+      widget.style.display = "none";
+    }, 300);
+
+    btn.style.transform = "scale(1)";
+  }
+};
+</script>
+</body>
+</html>
